@@ -29,6 +29,7 @@ return [
          * Messages table to appears in the ticket
          */
         'messages' => [
+            'message_model' => \App\Models\Message::class,
             'table' => 'messages',
             /**
              * This is the foreing key for associated to the ticket
@@ -39,7 +40,8 @@ return [
              * @see https://laravel.com/docs/9.x/eloquent-relationships#one-to-many
              */
             'columns' => [
-                'ticket_foreing_id' => 'ticket_id',
+                'ticket_foreign_id' => 'ticket_id',
+                'user_foreign_id' => 'user_id',
             ],
         ],
         /**
@@ -70,6 +72,7 @@ return [
                 'category_foreign_id' => 'category_id',
                 'ticket_foreign_id' => 'ticket_id',
             ],
+
         ],
     ],
 

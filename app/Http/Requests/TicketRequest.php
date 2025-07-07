@@ -20,6 +20,7 @@ class TicketRequest extends FormRequest
             'status'      => ['nullable', new Enum(Status::class)],
             'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
             'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['nullable', 'file', 'max:10240'], // 10MB max per file
         ];
     }
 

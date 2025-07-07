@@ -1,6 +1,11 @@
-<li>
-    <a {{ $attributes->merge(['class' => 'inline-flex items-center w-full px-2 py-1 text-sm font-semibold transition-colors duration-150 rounded-md hover:bg-gray-100 hover:text-gray-800']) }}>
-        {{ $icon ?? '' }}
-        <span>{{ $slot }}</span>
-    </a>
-</li>
+<a 
+    {{ $attributes->merge(['class' => 'block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center']) }}
+    role="menuitem"
+    tabindex="-1"
+    @click="closeProfileMenu"
+>
+    @if(isset($icon))
+        <span class="mr-3">{{ $icon }}</span>
+    @endif
+    <span>{{ $slot }}</span>
+</a>

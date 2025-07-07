@@ -25,13 +25,15 @@ class TicketController extends Controller
                 return $query->withPriority($request->input('priority'));
             })
             ->when($request->has('category'), function (Builder $query) use ($request) {
-                return $query->whereRelation('categories', 'id', $request->input('category'));
+                return $query->whereHas('categories', function ($q) use ($request) {
+                    $q->where('id', $request->input('category'));
+                });
             })
-            ->when(auth()->user()->hasRole('agent'), function (Builder $query) {
-                $query->where('assigned_to', auth()->user()->id);
+            ->when(optional(auth()->user())->hasRole('agent'), function (Builder $query) {
+                return $query->where('assigned_to', auth()->id());
             })
-            ->when(auth()->user()->hasRole('user'), function (Builder $query) {
-                $query->where('user_id', auth()->user()->id);
+            ->when(optional(auth()->user())->hasRole('user'), function (Builder $query) {
+                return $query->where('user_id', auth()->id());
             })
             ->latest()
             ->paginate();
@@ -52,11 +54,18 @@ class TicketController extends Controller
 
     public function store(TicketRequest $request)
     {
-        $ticket = auth()->user()->tickets()->create($request->only('title', 'message', 'status', 'priority'));
+        $ticket = Ticket::create(array_merge(
+            $request->only('title', 'message', 'status', 'priority'),
+            ['user_id' => auth()->id()]
+        ));
 
-        $ticket->attachCategories($request->input('categories'));
+        if ($request->filled('categories')) {
+            $ticket->attachCategories($request->input('categories'));
+        }
 
-        $ticket->attachLabels($request->input('labels'));
+        if ($request->filled('labels')) {
+            $ticket->attachLabels($request->input('labels'));
+        }
 
         if ($request->input('assigned_to')) {
             $ticket->assignTo($request->input('assigned_to'));
@@ -67,29 +76,34 @@ class TicketController extends Controller
         }
 
         if ($request->hasFile('attachments')) {
-    foreach ($request->file('attachments') as $file) {
-        // Make sure the file exists and is valid
-        if ($file->isValid()) {
-            // Store the file and add it to the media collection
-            $ticket->addMedia($file)
-                   ->toMediaCollection('tickets_attachments');
+            foreach ($request->file('attachments') as $file) {
+                // Make sure the file exists and is valid
+                if ($file->isValid()) {
+                    // Store the file and add it to the media collection
+                    $ticket->addMedia($file)
+                           ->toMediaCollection('tickets_attachments');
+                }
+            }
         }
-    }
-}
 
         return to_route('tickets.index');
     }
 
     public function show(Ticket $ticket): View
     {
-
-        dd($ticket);
         $this->authorize('view', $ticket);
+    
+        $ticket->load('media');
+    
+        $messages = $ticket->messages()
+        ->latest()
+        ->paginate(20);
+    
+        $messages->load('user');
 
-        $ticket->load(['media', 'messages' => fn ($query) => $query->latest()]);
-
-        return view('tickets.show', compact('ticket'));
+        return view('tickets.show', compact('ticket', 'messages'));
     }
+    
 
     public function edit(Ticket $ticket): View
     {
@@ -119,15 +133,15 @@ class TicketController extends Controller
         }
 
         if ($request->hasFile('attachments')) {
-    foreach ($request->file('attachments') as $file) {
-        // Make sure the file exists and is valid
-        if ($file->isValid()) {
-            // Store the file and add it to the media collection
-            $ticket->addMedia($file)
-                   ->toMediaCollection('tickets_attachments');
+            foreach ($request->file('attachments') as $file) {
+                // Make sure the file exists and is valid
+                if ($file->isValid()) {
+                    // Store the file and add it to the media collection
+                    $ticket->addMedia($file)
+                           ->toMediaCollection('tickets_attachments');
+                }
+            }
         }
-    }
-}
 
         return to_route('tickets.index');
     }
@@ -143,15 +157,15 @@ class TicketController extends Controller
 
     public function upload(Request $request)
     {
-        $path = [];
+        $paths = [];
 
         if ($request->file('attachments')) {
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('tmp', 'public');
+                $paths[] = $file->store('tmp', 'public');
             }
         }
 
-        return $path;
+        return $paths;
     }
 
     public function close(Ticket $ticket)

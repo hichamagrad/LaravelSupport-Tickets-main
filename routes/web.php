@@ -10,9 +10,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DownloadAttachmentController;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 
@@ -35,11 +36,20 @@ Route::middleware('auth')->group(function () {
 
         Route::get('activities', ActivityController::class)->name('activities');
 
-        Route::resource('categories', CategoryController::class)->middleware('role:admin');
-        Route::resource('labels', LabelController::class)->middleware('role:admin');
+        Route::resource('categories', CategoryController::class);
+        Route::resource('labels', LabelController::class);
     });
 
     Route::post('messages/{ticket}', [MessageController::class, 'store'])->name('message.store');
+    Route::get('tickets/{ticket}/messages', [MessageController::class, 'getMessages'])->name('messages.get');
+
 
     Route::get('download/attachment/{mediaItem}', DownloadAttachmentController::class)->name('attachment-download');
+    Route::post('/upload-temp', function (Request $request) {
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('temp-uploads', 'public');
+            return response()->json(['path' => $path]);
+        }
+        return response()->json(['error' => 'No file uploaded'], 422);
+    });
 });

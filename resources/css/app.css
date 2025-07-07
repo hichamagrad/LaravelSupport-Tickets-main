@@ -3,3 +3,46 @@
 @import 'tailwindcss/utilities';
 
 @import "filepond/dist/filepond.min.css";
+
+/* Fix for clickable elements in the middle section */
+main {
+  z-index: 30 !important;
+  position: relative;
+  pointer-events: auto !important;
+  background-color: white !important;
+}
+
+.container {
+  z-index: 40 !important;
+  position: relative;
+  pointer-events: auto !important;
+}
+
+/* Ensure all cards in dashboard are clickable */
+.container a,
+.container button {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 50 !important;
+}
+
+/* Replace all gray backgrounds with white in the main content area */
+.bg-gray-50 {
+  background-color: white !important;
+}
+
+/* Hide elements with x-cloak */
+[x-cloak] {
+  display: none !important;
+}
+
+/* Fix for any invisible overlays */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: -9999;
+}

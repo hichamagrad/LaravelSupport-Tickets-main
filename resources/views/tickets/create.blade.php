@@ -1,4 +1,6 @@
 <x-app-layout>
+<link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
+<script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
     <x-slot name="header">
         {{ __('Create ticket') }}
     </x-slot>
@@ -86,7 +88,7 @@
             <!-- Attachments -->
             <div class="mt-4">
                 <x-input-label for="attachments" :value="__('Attachments')" />
-                <input type="file" name="attachments[]" multiple class="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:border file:rounded-md file:bg-gray-100 file:text-gray-700 file:hover:bg-gray-200">
+                <input type="file" name="attachments[]" multiple id="filepond" class="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:border file:rounded-md file:bg-gray-100 file:text-gray-700 file:hover:bg-gray-200">
                 <x-input-error :messages="$errors->get('attachments')" class="mt-2" />
             </div>
 
@@ -100,3 +102,16 @@
 
     </div>
 </x-app-layout>
+<script>
+FilePond.setOptions({
+    server: {
+        process: {
+            url: '/upload-temp',
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        }
+    }
+});
+</script>
